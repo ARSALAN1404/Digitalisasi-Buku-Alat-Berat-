@@ -16,13 +16,13 @@ import RiwayatScreen from '../screens/RiwayatScreen';
 import RiwayatDetailScreen from '../screens/RiwayatDetailScreen';
 import ProfileScreen from '../screens/ProfilScreen';
 
-import KatalogScreen from '../screens/KatalogScreen';
+// Katalog & Detail Screens
+import KatalogScreen from '../screens/KatalogScreen'; // SUDAH BENAR
 import DetailScreen from '../screens/DetailScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const RiwayatStack = createStackNavigator();
-
 
 const RiwayatStackScreen = () => {
   return (
@@ -37,7 +37,7 @@ const MainTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarActiveTintColor: '#FBC02D',
+      tabBarActiveTintColor: '#FFB800', // Aksen Kuning Komatsu
       tabBarInactiveTintColor: '#888',
       tabBarStyle: {
         backgroundColor: '#FFF',
@@ -70,25 +70,24 @@ const MainTabs = () => (
     <Tab.Screen name="Chat" component={ChatScreen} />
     <Tab.Screen name="Scan" component={ScanScreen} />
     <Tab.Screen name="Riwayat" component={RiwayatStackScreen} />
-
     <Tab.Screen name="Profil" component={ProfileScreen} />
   </Tab.Navigator>
 );
-
 
 export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       
-      {/* AUTH */}
+      {/* AUTH SCREENS */}
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
-      {/* MAIN APP */}
+      {/* MAIN APP TABS */}
       <Stack.Screen name="Main" component={MainTabs} />
 
-      <Stack.Screen name="Katalog" component={KatalogScreen} />
+      {/* SUB-PAGES (Akan menutupi Bottom Tab saat dibuka) */}
+      <Stack.Screen name="Katalog" component={KatalogScreen} /> 
       <Stack.Screen name="Detail" component={DetailScreen} />
 
     </Stack.Navigator>

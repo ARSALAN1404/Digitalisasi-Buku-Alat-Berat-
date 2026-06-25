@@ -10,6 +10,10 @@ import { API_ENDPOINTS } from '../data/api';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// WARNA KONSEP (KOMATSU INDUSTRIAL)
+const KOMATSU_YELLOW = '#FFB800'; 
+const DEEP_BLUE = '#001F3F';
+
 // ==========================================
 // HELPER: AUTO-HEIGHT IMAGE COMPONENT
 // ==========================================
@@ -89,7 +93,7 @@ const StepCard = ({ data, index, isLastStep, onFinish, onNext }) => {
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <View style={styles.modalContainer}>
           <SafeAreaView style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}><MaterialCommunityIcons name="close-circle" size={40} color="#FFD700" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalVisible(false)}><MaterialCommunityIcons name="close-circle" size={40} color={KOMATSU_YELLOW} /></TouchableOpacity>
           </SafeAreaView>
           <ScrollView maximumZoomScale={4} minimumZoomScale={1} centerContent={true}>
              <Image source={{ uri: selectedImg }} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT * 0.8 }} resizeMode="contain" />
@@ -191,7 +195,6 @@ const ChatScreen = ({ navigation, route }) => {
         const finalData = { ...json.header, causes: json.causes };
 setActiveData(finalData);
 
-// simpan ke history
 saveToHistory(
   mode,
   mode === 'CODE' ? Number(finalData.id) : null,
@@ -214,10 +217,7 @@ saveToHistory(
     troubleshootingCaseId,
     title
   ) => {
-    if (!userNim) {
-      console.log('userNim belum ada');
-      return;
-    }
+    if (!userNim) return;
 
     try {
     const payload = {
@@ -228,20 +228,11 @@ saveToHistory(
       diagnosisTitle: title
     };
 
-    console.log('PAYLOAD HISTORY:', payload);
-
-    const response = await fetch(API_ENDPOINTS.saveHistory, {
+    await fetch(API_ENDPOINTS.saveHistory, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    const result = await response.text();
-
-    console.log('STATUS HISTORY:', response.status);
-    console.log('RESPONSE HISTORY:', result);
 
   } catch (error) {
     console.log('HISTORY ERROR:', error);
@@ -260,7 +251,7 @@ saveToHistory(
 
     return (
       <View style={styles.infoCard}>
-        <View style={styles.cardHeaderRow}><MaterialCommunityIcons name="check-decagram" size={16} color="#FFD700" /><Text style={styles.cardInfoTag}> SELECTED DIAGNOSTIC RESULT</Text></View>
+        <View style={styles.cardHeaderRow}><MaterialCommunityIcons name="shield-check" size={16} color={KOMATSU_YELLOW} /><Text style={styles.cardInfoTag}> DIAGNOSTIC RESULT</Text></View>
         <Text style={styles.infoTitle}>{data.code || data.case_code} {data.user_code ? `(${data.user_code})` : ''}</Text>
         <Text style={styles.infoDesc}>{data.description || data.title}</Text>
         <View style={styles.divider} />
@@ -289,9 +280,16 @@ saveToHistory(
 
   const renderMessage = ({ item }) => {
     const isUser = item.sender === 'user';
+    // Menambahkan 'result_list' ke isComplexCard agar dia CENTER
+    const isComplexCard = ['info_card', 'mode_selection', 'step_card', 'result_list'].includes(item.type);
+
     return (
-      <View style={[styles.msgWrapper, isUser ? styles.userWrapper : styles.botWrapper]}>
-        {!isUser && <View style={styles.botAvatar}><MaterialCommunityIcons name="robot-industrial" size={20} color="#FFD700" /></View>}
+      <View style={[
+          styles.msgWrapper, 
+          isUser ? styles.userWrapper : styles.botWrapper,
+          isComplexCard && { justifyContent: 'center' } 
+      ]}>
+        {!isUser && !isComplexCard && <View style={styles.botAvatar}><MaterialCommunityIcons name="robot-industrial" size={20} color={KOMATSU_YELLOW} /></View>}
         
         {item.type === 'mode_selection' ? (
           <View style={styles.modeContainer}>
@@ -304,7 +302,7 @@ saveToHistory(
                 { label: 'S', icon: 'cog-outline', sub: 'Mechanical' }
               ].map((m) => (
                 <TouchableOpacity key={m.label} style={styles.modeCard} onPress={() => selectMode(m.label)}>
-                  <View style={styles.modeIconCircle}><MaterialCommunityIcons name={m.icon} size={28} color="#003366" /></View>
+                  <View style={styles.modeIconCircle}><MaterialCommunityIcons name={m.icon} size={28} color={DEEP_BLUE} /></View>
                   <Text style={styles.modeCardLabel}>{m.label}</Text>
                   <Text style={styles.modeCardSub}>{m.sub}</Text>
                 </TouchableOpacity>
@@ -312,12 +310,17 @@ saveToHistory(
             </View>
           </View>
         ) : item.type === 'result_list' ? (
-          <View style={styles.botBubble}>
-            <Text style={styles.botText}>{item.text}</Text>
+          <View style={styles.resultListContainer}>
+            <Text style={styles.resultListHeader}>{item.text}</Text>
             {item.data.map((res, i) => (
               <TouchableOpacity key={`${i}-${Date.now()}`} style={styles.resultItem} onPress={() => fetchDetail(res.id, item.mode)}>
-                <Text style={styles.resultTitle}>{res.code || res.case_code}</Text>
-                <Text style={styles.resultSub} numberOfLines={1}>{res.description || res.title}</Text>
+                <View style={styles.resultItemRow}>
+                    <View style={styles.resultCodeBox}><Text style={styles.resultTitle}>{res.code || res.case_code}</Text></View>
+                    <View style={styles.resultInfoBox}>
+                        <Text style={styles.resultSub} numberOfLines={2}>{res.description || res.title}</Text>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={DEEP_BLUE} />
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -330,7 +333,7 @@ saveToHistory(
                     setMessages(prev => [...prev, { id: 'step-0-' + Date.now(), sender: 'bot', type: 'step_card', data: activeData.causes[0], currentIndex: 0 }]);
                 } else Alert.alert("Info", "Troubleshooting steps not available.");
              }}>
-               <Text style={styles.btnTextWhite}>Show Steps</Text>
+               <Text style={styles.btnTextYellow}>Show Steps</Text>
              </TouchableOpacity>
            </View>
          ) : item.type === 'step_card' ? (
@@ -354,28 +357,60 @@ saveToHistory(
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor={DEEP_BLUE} />
+      
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><MaterialCommunityIcons name="chevron-left" size={32} color="#003366" /></TouchableOpacity>
-        <Text style={styles.headerTitle}>TAB Diagnostic Bot</Text>
-        <TouchableOpacity onPress={resetChat}><MaterialCommunityIcons name="refresh" size={24} color="#003366" /></TouchableOpacity>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFF" />
+        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerMainTitle}>TAB DIAGNOSTIC</Text>
+            <View style={styles.statusRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.headerSubTitle}>AI System Active</Text>
+            </View>
+        </View>
+        <TouchableOpacity style={styles.refreshBtn} onPress={resetChat}>
+            <MaterialCommunityIcons name="refresh" size={22} color={KOMATSU_YELLOW} />
+        </TouchableOpacity>
       </View>
+
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <FlatList
           ref={flatListRef} data={messages} keyExtractor={(item) => item.id}
           renderItem={renderMessage} contentContainerStyle={styles.chatContent}
           onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}
         />
-        {loading && <ActivityIndicator size="small" color="#003366" style={{ marginBottom: 10 }} />}
+        {loading && <ActivityIndicator size="small" color={DEEP_BLUE} style={{ marginBottom: 10 }} />}
+        
         {selectedMode && (
           <View style={styles.selectedModeBar}>
-             <View style={styles.modeTag}><MaterialCommunityIcons name="bullseye-arrow" size={14} color="#003366" /><Text style={styles.modeTagText}> Active Mode: <Text style={{fontWeight: 'bold'}}>{selectedMode}</Text></Text></View>
-             <TouchableOpacity style={styles.changeModeAction} onPress={triggerModeSelection}><Text style={styles.changeModeActionText}>CHANGE MODE</Text></TouchableOpacity>
+             <View style={styles.modeTag}>
+                <MaterialCommunityIcons name="bullseye-arrow" size={14} color={DEEP_BLUE} />
+                <Text style={styles.modeTagText}> Active Mode: <Text style={{fontWeight: 'bold'}}>{selectedMode}</Text></Text>
+             </View>
+             <TouchableOpacity style={styles.changeModeAction} onPress={triggerModeSelection}>
+                <Text style={styles.changeModeActionText}>CHANGE MODE</Text>
+             </TouchableOpacity>
           </View>
         )}
+
         <View style={styles.inputArea}>
-          <TextInput style={styles.textInput} placeholder={selectedMode ? `Type keyword...` : "Select mode"} value={searchText} onChangeText={setSearchText} onSubmitEditing={() => handleSearch()} editable={!!selectedMode} />
-          <TouchableOpacity style={[styles.sendBtn, {backgroundColor: selectedMode ? '#003366' : '#CCC'}]} onPress={() => handleSearch()} disabled={!selectedMode}><MaterialCommunityIcons name="send" size={22} color="#FFD700" /></TouchableOpacity>
+          <TextInput 
+            style={styles.textInput} 
+            placeholder={selectedMode ? `Type keyword...` : "Select mode above"} 
+            value={searchText} 
+            onChangeText={setSearchText} 
+            onSubmitEditing={() => handleSearch()} 
+            editable={!!selectedMode} 
+          />
+          <TouchableOpacity 
+            style={[styles.sendBtn, {backgroundColor: selectedMode ? DEEP_BLUE : '#CCC'}]} 
+            onPress={() => handleSearch()} 
+            disabled={!selectedMode}
+          >
+            <MaterialCommunityIcons name="send" size={22} color={KOMATSU_YELLOW} />
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -383,75 +418,106 @@ saveToHistory(
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, height: 60, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE', elevation: 2 },
-    headerTitle: { fontWeight: '900', fontSize: 16, color: '#003366', letterSpacing: 0.5 },
+    container: { flex: 1, backgroundColor: '#F4F7F9' },
+    header: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        paddingHorizontal: 15, 
+        paddingTop: Platform.OS === 'android' ? 10 : 0,
+        height: 75,
+        backgroundColor: DEEP_BLUE, 
+        borderBottomRightRadius: 25, 
+        borderBottomLeftRadius: 25,
+        elevation: 8,
+    },
+    backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+    headerTitleContainer: { alignItems: 'center' },
+    headerMainTitle: { fontWeight: '900', fontSize: 16, color: '#FFF', letterSpacing: 1.5 },
+    statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+    onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80', marginRight: 6 },
+    headerSubTitle: { fontSize: 10, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' },
+    refreshBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12 },
+
     chatContent: { padding: 15, paddingBottom: 20 },
-    msgWrapper: { flexDirection: 'row', marginBottom: 15, width: '100%' },
+    msgWrapper: { flexDirection: 'row', marginBottom: 20, width: '100%' },
     userWrapper: { justifyContent: 'flex-end' },
     botWrapper: { justifyContent: 'flex-start' },
-    botAvatar: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#003366', justifyContent: 'center', alignItems: 'center', marginRight: 10, alignSelf: 'flex-end' },
-    bubble: { padding: 12, borderRadius: 18, maxWidth: '85%' },
-    userBubble: { backgroundColor: '#FFD700', borderBottomRightRadius: 2, elevation: 1 },
-    botBubble: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#EEE', borderBottomLeftRadius: 2, padding: 12, elevation: 1 },
-    userText: { color: '#003366', fontWeight: 'bold' },
-    botText: { color: '#333', lineHeight: 20 },
-    modeContainer: { backgroundColor: '#FFF', padding: 20, borderRadius: 25, width: SCREEN_WIDTH * 0.82, elevation: 5, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5 },
-    modeTitle: { fontSize: 13, color: '#666', fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-    modeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-    modeCard: { width: '48%', backgroundColor: '#F8F9FA', paddingVertical: 15, borderRadius: 20, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#EEE' },
-    modeIconCircle: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-    modeCardLabel: { fontWeight: 'bold', fontSize: 14, color: '#003366' },
-    modeCardSub: { fontSize: 9, color: '#999', marginTop: 2, fontWeight: '600' },
-    selectedModeBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0F9FF', paddingHorizontal: 15, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#DEEFFF' },
-    modeTag: { flexDirection: 'row', alignItems: 'center' },
-    modeTagText: { fontSize: 12, color: '#003366' },
-    changeModeAction: { backgroundColor: '#003366', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-    changeModeActionText: { color: '#FFD700', fontSize: 10, fontWeight: 'bold' },
+    botAvatar: { width: 34, height: 34, borderRadius: 10, backgroundColor: DEEP_BLUE, justifyContent: 'center', alignItems: 'center', marginRight: 10, alignSelf: 'flex-end' },
     
-    infoCard: { backgroundColor: '#001a33', padding: 20, borderRadius: 25, width: SCREEN_WIDTH * 0.85, elevation: 8, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
-    cardHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
-    cardInfoTag: { color: '#FFD700', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
-    infoTitle: { color: '#FFF', fontSize: 22, fontWeight: 'bold' },
-    infoDesc: { color: '#DDD', fontSize: 13, marginTop: 4, fontStyle: 'italic' },
-    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 15 },
+    bubble: { padding: 14, borderRadius: 20, maxWidth: '80%' },
+    userBubble: { backgroundColor: KOMATSU_YELLOW, borderBottomRightRadius: 4, alignSelf: 'flex-end' },
+    botBubble: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E2E8F0', borderBottomLeftRadius: 4, padding: 14, maxWidth: '85%' },
+    userText: { color: DEEP_BLUE, fontWeight: 'bold', fontSize: 14 },
+    botText: { color: '#334155', lineHeight: 20, fontSize: 14 },
+
+    modeContainer: { backgroundColor: '#FFF', padding: 20, borderRadius: 25, width: SCREEN_WIDTH * 0.9, alignSelf: 'center', elevation: 5, borderWidth: 1, borderColor: '#F1F5F9' },
+    modeTitle: { fontSize: 12, color: '#64748B', fontWeight: '800', marginBottom: 15, textAlign: 'center' },
+    modeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    modeCard: { width: '48%', backgroundColor: '#F8FAFC', paddingVertical: 15, borderRadius: 20, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+    modeIconCircle: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+    modeCardLabel: { fontWeight: 'bold', fontSize: 14, color: DEEP_BLUE },
+    modeCardSub: { fontSize: 9, color: '#94A3B8', marginTop: 2, fontWeight: '700' },
+
+    // PERBAIKAN RESULT LIST (Centered Card)
+    resultListContainer: { backgroundColor: '#FFF', padding: 18, borderRadius: 25, width: SCREEN_WIDTH * 0.9, alignSelf: 'center', elevation: 5, borderWidth: 1, borderColor: '#F1F5F9' },
+    resultListHeader: { fontSize: 12, color: '#64748B', fontWeight: '800', marginBottom: 15 },
+    resultItem: { backgroundColor: '#F8FAFC', padding: 12, borderRadius: 18, marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+    resultItemRow: { flexDirection: 'row', alignItems: 'center' },
+    resultCodeBox: { backgroundColor: DEEP_BLUE, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, marginRight: 12 },
+    resultTitle: { fontWeight: 'bold', color: KOMATSU_YELLOW, fontSize: 13 },
+    resultInfoBox: { flex: 1 },
+    resultSub: { fontSize: 12, color: '#334155', lineHeight: 18 },
+
+    selectedModeBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFF', paddingHorizontal: 15, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
+    modeTag: { flexDirection: 'row', alignItems: 'center' },
+    modeTagText: { fontSize: 12, color: DEEP_BLUE },
+    changeModeAction: { backgroundColor: DEEP_BLUE, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+    changeModeActionText: { color: KOMATSU_YELLOW, fontSize: 10, fontWeight: '900' },
+    
+    infoCard: { backgroundColor: '#001529', padding: 22, borderRadius: 28, width: SCREEN_WIDTH * 0.92, alignSelf: 'center', elevation: 12, borderWidth: 1, borderColor: 'rgba(255,184,0,0.2)' },
+    cardHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+    cardInfoTag: { color: KOMATSU_YELLOW, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+    infoTitle: { color: '#FFF', fontSize: 24, fontWeight: '900' },
+    infoDesc: { color: '#94A3B8', fontSize: 13, marginTop: 4, fontStyle: 'italic' },
+    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 18 },
     gridRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
     gridCol: { flex: 1 },
-    dataSection: { marginBottom: 15 },
-    labelSmall: { color: '#888', fontSize: 10, fontWeight: 'bold', marginBottom: 4 },
-    valueWhite: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
-    valueWhiteSmall: { color: '#EEE', fontSize: 12, lineHeight: 18 },
-    valueYellow: { color: '#FFD700', fontSize: 15, fontWeight: 'bold' },
+    dataSection: { marginBottom: 16 },
+    labelSmall: { color: '#64748B', fontSize: 10, fontWeight: '900', marginBottom: 5 },
+    valueWhite: { color: '#F8FAFC', fontSize: 15, fontWeight: 'bold' },
+    valueWhiteSmall: { color: '#CBD5E1', fontSize: 12, lineHeight: 18 },
+    valueYellow: { color: KOMATSU_YELLOW, fontSize: 16, fontWeight: 'bold' },
 
-    resultItem: { backgroundColor: '#F8F9FA', padding: 12, borderRadius: 15, marginTop: 10, borderWidth: 1, borderColor: '#EEE' },
-    resultTitle: { fontWeight: 'bold', color: '#003366', fontSize: 14 },
-    resultSub: { fontSize: 11, color: '#666', marginTop: 3 },
-    btnConfirm: { backgroundColor: '#003366', padding: 12, borderRadius: 12, marginTop: 15, alignItems: 'center' },
-    btnTextWhite: { color: '#FFF', fontWeight: 'bold' },
-    stepCard: { backgroundColor: '#FFF', padding: 20, borderRadius: 25, width: SCREEN_WIDTH * 0.9, elevation: 3, marginTop: 5, borderWidth: 1, borderColor: '#EEE' },
+    btnConfirm: { backgroundColor: '#002B5B', padding: 15, borderRadius: 16, marginTop: 15, alignItems: 'center', elevation: 4, borderWidth: 1, borderColor: 'rgba(255,184,0,0.3)' },
+    btnTextYellow: { color: KOMATSU_YELLOW, fontWeight: '900', fontSize: 14 },
+
+    stepCard: { backgroundColor: '#FFF', padding: 22, borderRadius: 28, width: SCREEN_WIDTH * 0.92, alignSelf: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#F1F5F9', elevation: 5 },
     stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-    stepBadge: { width: 26, height: 26, borderRadius: 8, backgroundColor: '#003366', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    stepBadgeText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
-    stepHeaderText: { color: '#003366', fontWeight: '900', fontSize: 14, letterSpacing: 1 },
-    causeDesc: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 },
-    btnCircuit: { backgroundColor: '#334155', padding: 10, borderRadius: 12, marginBottom: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-    imageFrame: { borderWidth: 1, borderColor: '#DDD', borderRadius: 15, padding: 8, marginBottom: 15, backgroundColor: '#FAFAFA' },
-    imageFrameStandard: { borderRadius: 12, overflow: 'hidden', marginTop: 8 },
-    labelFrame: { fontSize: 9, color: '#666', textAlign: 'center', marginBottom: 8, fontWeight: 'bold' },
+    stepBadge: { width: 28, height: 28, borderRadius: 10, backgroundColor: DEEP_BLUE, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    stepBadgeText: { color: KOMATSU_YELLOW, fontSize: 12, fontWeight: '900' },
+    stepHeaderText: { color: DEEP_BLUE, fontWeight: '900', fontSize: 14, letterSpacing: 1.5 },
+    causeDesc: { fontSize: 19, fontWeight: '900', color: '#1E293B', marginBottom: 15 },
+    btnCircuit: { backgroundColor: '#334155', padding: 12, borderRadius: 14, marginBottom: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    imageFrame: { borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 18, padding: 10, marginBottom: 15, backgroundColor: '#F8FAFC' },
+    imageFrameStandard: { borderRadius: 14, overflow: 'hidden', marginTop: 10 },
+    labelFrame: { fontSize: 9, color: '#94A3B8', textAlign: 'center', marginBottom: 10, fontWeight: '800' },
     fullImage: { width: '100%' },
-    methodBox: { backgroundColor: '#F1F3F5', padding: 12, borderRadius: 15, marginBottom: 10 },
-    methodText: { fontSize: 13, color: '#444', lineHeight: 20 },
-    standardBox: { backgroundColor: '#EBFBEE', padding: 12, borderRadius: 15, marginBottom: 15 },
-    standardValueText: { fontSize: 15, fontWeight: 'bold', color: '#2F9E44' },
+    methodBox: { backgroundColor: '#F1F5F9', padding: 14, borderRadius: 18, marginBottom: 12 },
+    methodText: { fontSize: 13, color: '#334155', lineHeight: 22 },
+    standardBox: { backgroundColor: '#F0FDF4', padding: 14, borderRadius: 18, marginBottom: 15, borderWidth: 1, borderColor: '#DCFCE7' },
+    standardValueText: { fontSize: 16, fontWeight: '900', color: '#166534' },
     standardImage: { width: '100%' },
-    remedyBox: { backgroundColor: '#FFF9DB', padding: 12, borderRadius: 15, marginBottom: 15, borderLeftWidth: 4, borderLeftColor: '#F59F00' },
+    remedyBox: { backgroundColor: '#FFFBEB', padding: 14, borderRadius: 18, marginBottom: 15, borderLeftWidth: 5, borderLeftColor: KOMATSU_YELLOW },
     stepActionRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    btnYa: { flex: 1.2, backgroundColor: '#2F9E44', padding: 14, borderRadius: 15, marginRight: 8, alignItems: 'center', elevation: 2 },
-    btnTidak: { flex: 1, backgroundColor: '#FFD700', padding: 14, borderRadius: 15, alignItems: 'center', elevation: 2 },
-    btnTextBlack: { color: '#000', fontWeight: 'bold' },
-    inputArea: { flexDirection: 'row', padding: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#EEE', alignItems: 'center' },
-    textInput: { flex: 1, backgroundColor: '#F1F3F5', borderRadius: 25, paddingHorizontal: 20, height: 48, borderWidth: 1, borderColor: '#E9ECEF' },
-    sendBtn: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginLeft: 10, elevation: 2 },
+    btnYa: { flex: 1.2, backgroundColor: '#166534', padding: 15, borderRadius: 18, marginRight: 10, alignItems: 'center' },
+    btnTidak: { flex: 1, backgroundColor: KOMATSU_YELLOW, padding: 15, borderRadius: 18, alignItems: 'center' },
+    btnTextBlack: { color: DEEP_BLUE, fontWeight: '900' },
+    btnTextWhite: { color: '#FFF', fontWeight: '900' },
+    
+    inputArea: { flexDirection: 'row', padding: 15, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F1F5F9', alignItems: 'center' },
+    textInput: { flex: 1, backgroundColor: '#F1F5F9', borderRadius: 20, paddingHorizontal: 20, height: 52, fontSize: 14, color: '#1E293B' },
+    sendBtn: { width: 52, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginLeft: 12, elevation: 4 },
     modalContainer: { flex: 1, backgroundColor: '#000' },
     modalHeader: { padding: 20, alignItems: 'flex-end' }
 });
