@@ -2,7 +2,12 @@
 // const IP_ADDRESS = "10.56.114.244"; // SESUAI IP WI-FI LAPTOP LO
 //const IP_ADDRESS = "172.20.10.2";
 //const IP_ADDRESS = "192.168.100.251";//
+<<<<<<< HEAD
 const IP_ADDRESS = "10.1.13.253";//
+=======
+//const IP_ADDRESS = "10.1.13.253";//
+
+>>>>>>> d6b4ed13a56f1f162bd42b16da358db548ec7177
 const PORT = "5234";
 
 export const BASE_URL = `http://${IP_ADDRESS}:${PORT}/api`;

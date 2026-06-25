@@ -13,7 +13,7 @@ import HomeScreen from '../screens/HomeScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ScanScreen from '../screens/ScanScreen';
 import RiwayatScreen from '../screens/RiwayatScreen';
-import RiwayatDetailScreen from '../screens/RiwayatDetailScreen';
+import RiwayatDetailScreen from '../screens/RiwayatScreen';
 import ProfileScreen from '../screens/ProfilScreen';
 
 import KatalogScreen from '../screens/KatalogScreen';
