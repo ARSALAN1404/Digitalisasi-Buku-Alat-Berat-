@@ -208,6 +208,46 @@ saveToHistory(
     finally { setLoading(false); }
   };
 
+  const saveToHistory = async (
+    diagnosisType,
+    failureCodeId,
+    troubleshootingCaseId,
+    title
+  ) => {
+    if (!userNim) {
+      console.log('userNim belum ada');
+      return;
+    }
+
+    try {
+    const payload = {
+      diagnosisType,
+      failureCodeId: failureCodeId ?? null,
+      troubleshootingCaseId: troubleshootingCaseId ?? null,
+      userNim,
+      diagnosisTitle: title
+    };
+
+    console.log('PAYLOAD HISTORY:', payload);
+
+    const response = await fetch(API_ENDPOINTS.saveHistory, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.text();
+
+    console.log('STATUS HISTORY:', response.status);
+    console.log('RESPONSE HISTORY:', result);
+
+  } catch (error) {
+    console.log('HISTORY ERROR:', error);
+  }
+  };
+
 
   const InfoCard = ({ data }) => {
     const renderItems = (text) => {
