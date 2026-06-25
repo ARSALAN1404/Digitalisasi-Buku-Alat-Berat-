@@ -131,7 +131,7 @@ const RiwayatScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>
-        Monitoring Riwayat
+        History Monitoring
       </Text>
 
       <View style={styles.tabContainer}>
