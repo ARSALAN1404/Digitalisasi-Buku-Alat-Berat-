@@ -98,7 +98,7 @@ const StepCard = ({ data, index, isLastStep, onFinish, onNext }) => {
       </Modal>
     </View>
   );
-};
+}; 
 
 // ==========================================
 // MAIN SCREEN
@@ -112,12 +112,28 @@ const ChatScreen = ({ navigation, route }) => {
   const [activeData, setActiveData] = useState(null);
   const [selectedMode, setSelectedMode] = useState(null);
   const flatListRef = useRef();
+  const [userNim, setUserNim] = useState(null);
 
   useEffect(() => {
-    if (route.params?.scannedCode) {
-      selectMode('CODE', route.params.scannedCode);
+  const getSession = async () => {
+    try {
+      const session = await AsyncStorage.getItem('user_session');
+
+      if (session) {
+        const userData = JSON.parse(session);
+        setUserNim(userData.nim);
+      }
+    } catch (e) {
+      console.log('Gagal ambil session:', e);
     }
-  }, [route.params?.scannedCode]);
+  };
+
+  getSession();
+
+  if (route.params?.scannedCode) {
+    selectMode('CODE', route.params.scannedCode);
+  }
+}, [route.params?.scannedCode]);
 
   const resetChat = () => {
     setSelectedMode(null);
@@ -130,6 +146,7 @@ const ChatScreen = ({ navigation, route }) => {
       id: 'reselect-' + Date.now(), sender: 'bot', text: 'Silakan pilih kembali mode diagnosa:', type: 'mode_selection' 
     }]);
   };
+  
 
   const selectMode = (mode, autoKeyword = null) => {
     setSelectedMode(mode);
@@ -172,7 +189,16 @@ const ChatScreen = ({ navigation, route }) => {
       const json = await res.json();
       if (res.ok) {
         const finalData = { ...json.header, causes: json.causes };
-        setActiveData(finalData);
+setActiveData(finalData);
+
+// simpan ke history
+saveToHistory(
+  mode,
+  mode === 'CODE' ? Number(finalData.id) : null,
+  mode !== 'CODE' ? Number(finalData.id) : null,
+  finalData.description || finalData.title
+);
+
         setMessages(prev => [...prev, { id: 'info-' + Date.now(), sender: 'bot', type: 'info_card', data: finalData }]);
         setTimeout(() => {
           setMessages(prev => [...prev, { id: 'confirm-' + Date.now(), sender: 'bot', type: 'confirm_ask', text: 'Lihat langkah troubleshooting lengkap?' }]);
@@ -181,6 +207,46 @@ const ChatScreen = ({ navigation, route }) => {
     } catch (e) { console.log(e); }
     finally { setLoading(false); }
   };
+
+  const saveToHistory = async (
+  diagnosisType,
+  failureCodeId,
+  troubleshootingCaseId,
+  title
+) => {
+  if (!userNim) {
+    console.log('userNim belum ada');
+    return;
+  }
+
+  try {
+  const payload = {
+    diagnosisType,
+    failureCodeId: failureCodeId ?? null,
+    troubleshootingCaseId: troubleshootingCaseId ?? null,
+    userNim,
+    diagnosisTitle: title
+  };
+
+  console.log('PAYLOAD HISTORY:', payload);
+
+  const response = await fetch(API_ENDPOINTS.saveHistory, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.text();
+
+  console.log('STATUS HISTORY:', response.status);
+  console.log('RESPONSE HISTORY:', result);
+
+} catch (error) {
+  console.log('HISTORY ERROR:', error);
+}
+};
 
   // ==========================================
   // INFOCARD: MENAMPILKAN SEMUA DETAIL DARI BE
