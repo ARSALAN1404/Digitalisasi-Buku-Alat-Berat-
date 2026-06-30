@@ -20,21 +20,12 @@ const YELLOW = '#F5C518';
 const RiwayatScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [role, setRole] = useState(null);
   const [data, setData] = useState([]);
   const [selectedType, setSelectedType] = useState('CODE');
 
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
-      const session = await AsyncStorage.getItem('user_session');
-      if (!session) return;
-      const userData = JSON.parse(session);
-      setRole(userData.role);
-      if (userData.role !== 'lecturer') {
-        setData([]);
-        return;
-      }
       const response = await fetch(
         `${API_ENDPOINTS.historySummary}?diagnosisType=${selectedType}`
       );
@@ -83,30 +74,16 @@ const RiwayatScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  if (role === 'student') {
-    return (
-      <View style={styles.restrictedContainer}>
-        <MaterialCommunityIcons name="lock-alert-outline" size={100} color="#DDD" />
-        <Text style={styles.restrictedTitle}>Restricted Access</Text>
-        <Text style={styles.restrictedSub}>
-          History Monitoring page can only be accessed by Lecturer accounts.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={NAVY} />
 
-      {/* Navy header melengkung — tidak overlap ke bawah */}
       <View style={styles.header}>
         <SafeAreaView>
           <Text style={styles.headerTitle}>History Monitoring</Text>
         </SafeAreaView>
       </View>
 
-      {/* Tab + List — di luar header, tidak overlap */}
       <View style={styles.body}>
         <View style={styles.tabContainer}>
           {[
@@ -166,12 +143,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F3F7',
   },
-
-  /* Navy header — rounded bawah, padding cukup, TIDAK overlap */
   header: {
     backgroundColor: NAVY,
     paddingHorizontal: 24,
-    paddingTop: 0,
     paddingBottom: 28,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
@@ -184,14 +158,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     paddingTop: 16,
   },
-
-  /* Body normal di bawah header, ada gap kecil */
   body: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 20,
   },
-
   tabContainer: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -205,18 +176,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeTab: {
-    backgroundColor: NAVY,
-  },
-  tabText: {
-    color: '#666',
-    fontWeight: '600',
-    fontSize: 11,
-  },
-  activeTabText: {
-    color: '#FFF',
-  },
-
+  activeTab: { backgroundColor: NAVY },
+  tabText: { color: '#666', fontWeight: '600', fontSize: 11 },
+  activeTabText: { color: '#FFF' },
   card: {
     backgroundColor: '#FFF',
     borderRadius: 14,
@@ -239,53 +201,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
   },
-  code: {
-    fontWeight: 'bold',
-    color: NAVY,
-  },
-  searchBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchCount: {
-    marginLeft: 4,
-    fontWeight: '700',
-    color: NAVY,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 80,
-  },
-  emptyText: {
-    marginTop: 15,
-    color: '#999',
-  },
-
-  restrictedContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-    backgroundColor: '#FFF',
-  },
-  restrictedTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: NAVY,
-    marginTop: 25,
-  },
-  restrictedSub: {
-    textAlign: 'center',
-    color: '#888',
-    marginTop: 12,
-    lineHeight: 22,
-  },
+  code: { fontWeight: 'bold', color: NAVY },
+  searchBadge: { flexDirection: 'row', alignItems: 'center' },
+  searchCount: { marginLeft: 4, fontWeight: '700', color: NAVY },
+  title: { fontSize: 15, fontWeight: '600', color: '#333' },
+  emptyContainer: { alignItems: 'center', marginTop: 80 },
+  emptyText: { marginTop: 15, color: '#999' },
 });
 
 export default RiwayatScreen;
