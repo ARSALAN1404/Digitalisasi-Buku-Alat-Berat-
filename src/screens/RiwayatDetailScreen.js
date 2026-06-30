@@ -10,10 +10,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { API_ENDPOINTS } from '../data/api';
 
-const NAVY     = '#0D2B4E';
-const YELLOW   = '#F5C518';
+const NAVY = '#001F3F';
+const YELLOW = '#FFB800';
 const YELLOW_BG = '#FFFBEA';
 const WHITE    = '#FFFFFF';
 const BG       = '#F2F3F7';
@@ -52,7 +53,7 @@ const MahasiswaCard = ({ item }) => (
       </Text>
     </View>
     <View style={styles.countBox}>
-      <Text style={styles.countIcon}>🔍</Text>
+      <MaterialCommunityIcons name="magnify" size={17} color={NAVY} />
       <Text style={styles.countText}>{item.totalSearch}x</Text>
     </View>
   </View>
@@ -87,8 +88,8 @@ const RiwayatDetailScreen = ({ route, navigation }) => {
     <View style={styles.header}>
       <SafeAreaView>
         <View style={styles.navRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
-            <Text style={styles.backBtnText}>←</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.navTitle}>Diagnosis History</Text>
           <View style={{ width: 36 }} />
@@ -119,8 +120,8 @@ const RiwayatDetailScreen = ({ route, navigation }) => {
           <Text style={{ fontSize: 40, marginBottom: 16 }}>📋</Text>
           <Text style={styles.emptyTitle}>No Data Yet</Text>
           <Text style={styles.emptySubtitle}>No students have searched this diagnosis.</Text>
-          <TouchableOpacity style={styles.emptyBackBtn} onPress={() => navigation?.goBack()}>
-            <Text style={styles.emptyBackBtnText}>← Back</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFF" />
           </TouchableOpacity>
         </View>
       </View>

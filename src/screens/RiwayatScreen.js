@@ -14,8 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { API_ENDPOINTS } from '../data/api';
 
-const NAVY = '#0D2B4E';
-const YELLOW = '#F5C518';
+const NAVY = '#001F3F';
+const YELLOW = '#FFB800';
 
 const RiwayatScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
