@@ -3,8 +3,13 @@ const IP_ADDRESS = "10.1.12.29"; // SESUAI IP WI-FI LAPTOP LO
 //const IP_ADDRESS = "10.56.114.244"; // SESUAI IP WI-FI LAPTOP LO
 //const IP_ADDRESS = "172.20.10.2";
 //const IP_ADDRESS = "192.168.100.251";
+<<<<<<< HEAD
 //const IP_ADDRESS = "10.1.13.239";
 //const IP_ADDRESS = "10.1.13.253";
+=======
+const IP_ADDRESS = "10.1.13.239";
+
+>>>>>>> 769e72c435a3b5caac6ce6085a74a8fae6bfd576
 
 const PORT = "5234";
 

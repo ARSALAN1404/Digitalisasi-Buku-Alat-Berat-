@@ -49,7 +49,7 @@ const LoginScreen = ({ navigation }) => {
     try {
       await AsyncStorage.setItem('user_session', JSON.stringify(userData));
       setModalVisible(false);
-      navigation.replace('Main');
+      navigation.replace('Main', { role: userData.role });
     } catch (e) {
       console.log('Error saving session:', e);
     }

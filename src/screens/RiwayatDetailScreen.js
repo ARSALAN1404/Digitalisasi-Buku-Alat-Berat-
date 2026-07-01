@@ -10,74 +10,57 @@ import {
   SafeAreaView,
 } from 'react-native';
 
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { API_ENDPOINTS } from '../data/api';
 
-// Brand Colors
-const NAVY   = '#003366';
-const YELLOW = '#F5C518';
-const BG     = '#F0F2F5';
-const MUTED  = '#8A94A6';
-const WHITE  = '#FFFFFF';
+const NAVY = '#001F3F';
+const YELLOW = '#FFB800';
+const YELLOW_BG = '#FFFBEA';
+const WHITE    = '#FFFFFF';
+const BG       = '#F2F3F7';
+const MUTED    = '#9CA3AF';
+const SUBTEXT  = '#6B7280';
+const TEXT     = '#1A1D26';
+const BORDER   = '#E8ECF2';
+const RED_BG   = '#FDECEA';
+const RED      = '#D94F3D';
 
 const formatDateTime = (dateString) => {
   if (!dateString) return '-';
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    const formattedDate = date.toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    });
-    const formattedTime = date.toLocaleTimeString('en-US', {
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    });
-    return `${formattedDate}  ${formattedTime}`;
-  } catch {
-    return dateString;
-  }
+    const d = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const t = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${d}  ${t}`;
+  } catch { return dateString; }
 };
 
-const InfoRow = ({ label, value }) => (
-  <View style={styles.infoRow}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    <Text style={styles.infoValue}>{value}</Text>
-  </View>
-);
-
-const MahasiswaCard = ({ item, index }) => (
+const MahasiswaCard = ({ item }) => (
   <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <View style={styles.studentInfoLeft}>
-        <View style={styles.indexBadge}>
-          <Text style={styles.indexBadgeText}>
-            {String(index + 1).padStart(2, '0')}
-          </Text>
-        </View>
-        <View style={styles.nameMeta}>
-          <Text style={styles.studentName} numberOfLines={1}>
-            {item.namaMahasiswa ?? '-'}
-          </Text>
-          <Text style={styles.studentNim}>{item.nim ?? '-'}</Text>
-        </View>
-      </View>
-      <View style={styles.searchCountBox}>
-        <Text style={styles.searchCountText}>🔍 {item.totalSearch}x</Text>
-      </View>
+    <View style={styles.avatarBox}>
+      <Text style={styles.avatarText}>
+        {(item.namaMahasiswa ?? '?')[0].toUpperCase()}
+      </Text>
     </View>
-
-    <View style={styles.cardBody}>
-      <View style={styles.gridRow}>
-        <InfoRow label="First Search" value={formatDateTime(item.firstSearch)} />
-        <View style={styles.verticalDivider} />
-        <InfoRow label="Last Search" value={formatDateTime(item.lastSearch)} />
-      </View>
+    <View style={styles.cardInfo}>
+      <Text style={styles.studentName} numberOfLines={1}>
+        {item.namaMahasiswa ?? '-'}
+      </Text>
+      <Text style={styles.studentNim}>{item.nim ?? '-'}</Text>
+      <Text style={styles.dateRow}>
+        {formatDateTime(item.firstSearch)}  →  {formatDateTime(item.lastSearch)}
+      </Text>
+    </View>
+    <View style={styles.countBox}>
+      <MaterialCommunityIcons name="magnify" size={17} color={NAVY} />
+      <Text style={styles.countText}>{item.totalSearch}x</Text>
     </View>
   </View>
 );
 
-/* ── Main Screen ── */
 const RiwayatDetailScreen = ({ route, navigation }) => {
   const { id, diagnosisType, code, title } = route.params || {};
-
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
 
@@ -90,368 +73,210 @@ const RiwayatDetailScreen = ({ route, navigation }) => {
         `${API_ENDPOINTS.historyDetail}?diagnosisType=${diagnosisType}&idItem=${id}`
       );
       const json = await response.json();
-      const list = Array.isArray(json?.data)
-        ? json.data
-        : json?.data ? [json.data] : [];
+      const list = Array.isArray(json?.data) ? json.data : json?.data ? [json.data] : [];
       setData(list);
-    } catch (error) {
-      console.log('DETAIL ERROR:', error);
+    } catch (e) {
+      console.log('DETAIL ERROR:', e);
     } finally {
       setLoading(false);
     }
   };
 
+  const typeLabel = diagnosisType === 'CODE' ? 'Failure Code' : `${diagnosisType}-Mode`;
+
+  const Header = () => (
+    <View style={styles.header}>
+      <SafeAreaView>
+        <View style={styles.navRow}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>Diagnosis History</Text>
+          <View style={{ width: 36 }} />
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color={NAVY} />
-        <Text style={styles.loadingText}>Loading detail data...</Text>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+        <Header />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={NAVY} />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
     );
   }
 
   if (data.length === 0) {
     return (
-      <SafeAreaView style={styles.emptyScreen}>
-        {/* Navbar on empty state too */}
-        <View style={styles.navBar}>
-          <TouchableOpacity style={styles.navBackButton} onPress={() => navigation?.goBack()}>
-            <Text style={styles.navBackIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.navTitle}>History Details</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+        <Header />
         <View style={styles.center}>
-          <View style={styles.emptyIconCircle}>
-            <Text style={styles.emptyIcon}>📋</Text>
-          </View>
-          <Text style={styles.emptyTitle}>No Data Available</Text>
-          <Text style={styles.emptySubtitle}>
-            No students have searched this diagnosis yet.
-          </Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-            <Text style={styles.backButtonText}>← Back to History</Text>
+          <Text style={{ fontSize: 40, marginBottom: 16 }}>📋</Text>
+          <Text style={styles.emptyTitle}>No Data Yet</Text>
+          <Text style={styles.emptySubtitle}>No students have searched this diagnosis.</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFF" />
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  const typeLabel = diagnosisType === 'CODE'
-    ? 'Failure Code'
-    : `${diagnosisType}-Mode`;
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={WHITE} />
-
-      {/* Navbar */}
-      <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navBackButton} onPress={() => navigation?.goBack()}>
-          <Text style={styles.navBackIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.navTitle} numberOfLines={1}>History Details</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+      <Header />
 
       <ScrollView
-        contentContainerStyle={styles.contentContainer}
+        style={styles.body}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Card */}
-        <View style={styles.headerCard}>
-          {/* Type badge row */}
-          <View style={styles.headerTopRow}>
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeBadgeText}>{typeLabel}</Text>
+        {/* Info block */}
+        <View style={styles.infoBlock}>
+          <Text style={styles.infoCode}>{code || '-'}</Text>
+          <Text style={styles.infoTitle}>{title || 'No Title'}</Text>
+          <View style={styles.infoPillRow}>
+            <View style={styles.typePill}>
+              <Text style={styles.typePillText}>{typeLabel}</Text>
             </View>
-            <Text style={styles.studentCountText}>
+            <Text style={styles.infoCount}>
               {data.length} {data.length === 1 ? 'Student' : 'Students'}
             </Text>
           </View>
-
-          {/* Code */}
-          <Text style={styles.headerCode}>{code || '-'}</Text>
-
-          {/* Title */}
-          <Text style={styles.headerTitle}>{title || 'No Title'}</Text>
         </View>
 
         {/* Section label */}
-        <Text style={styles.sectionLabel}>Student Records</Text>
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionLabel}>STUDENT RECORDS</Text>
+          <View style={styles.sectionLine} />
+        </View>
 
-        {/* Student List */}
         {data.map((item, index) => (
           <MahasiswaCard key={item.nim ?? index} item={item} index={index} />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BG,
-  },
+  container: { flex: 1, backgroundColor: BG },
 
-  /* Navbar */
-  navBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: WHITE,
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  navBackButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: BG,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  navBackIcon: {
-    fontSize: 18,
-    color: NAVY,
-    fontWeight: '700',
-  },
-  navTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: NAVY,
-    flex: 1,
-    textAlign: 'center',
-  },
-
-  /* Scroll content */
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-
-  /* Header Card */
-  headerCard: {
+  /* Navy header melengkung */
+  header: {
     backgroundColor: NAVY,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  headerTopRow: {
+  navRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  typeBadge: {
-    backgroundColor: YELLOW,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+  backBtn: {
+    width: 36, height: 36,
+    justifyContent: 'center', alignItems: 'center',
   },
-  typeBadgeText: {
-    color: NAVY,
-    fontWeight: '700',
-    fontSize: 11,
-    letterSpacing: 0.3,
-  },
-  studentCountText: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  headerCode: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: YELLOW,
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: WHITE,
-    lineHeight: 26,
+  backBtnText: { fontSize: 22, color: WHITE, fontWeight: '700' },
+  navTitle: {
+    fontSize: 18, fontWeight: '700',
+    color: WHITE, letterSpacing: 0.2,
   },
 
-  /* Section label */
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: MUTED,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: 10,
-    marginLeft: 2,
+  body: { flex: 1 },
+  scroll: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 48 },
+
+  center: {
+    flex: 1, justifyContent: 'center',
+    alignItems: 'center', padding: 32,
   },
 
-  /* Student Card */
-  card: {
+  /* Info block */
+  infoBlock: {
     backgroundColor: WHITE,
-    borderRadius: 12,
-    marginBottom: 10,
-    elevation: 2,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 24,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: '#E8ECF0',
-    overflow: 'hidden',
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: '#F0F2F5',
+  infoCode: {
+    fontSize: 11, fontWeight: '800',
+    color: YELLOW, letterSpacing: 1.5, marginBottom: 4,
   },
-  studentInfoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-    marginRight: 10,
+  infoTitle: {
+    fontSize: 17, fontWeight: '700',
+    color: TEXT, marginBottom: 12, lineHeight: 24,
   },
-  indexBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: BG,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  indexBadgeText: {
-    color: NAVY,
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  nameMeta: {
-    flex: 1,
-  },
-  studentName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: NAVY,
-  },
-  studentNim: {
-    fontSize: 12,
-    color: MUTED,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-  searchCountBox: {
-    backgroundColor: '#FFF9E6',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    flexShrink: 0,
-  },
-  searchCountText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: NAVY,
-  },
-  cardBody: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  verticalDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: '#E2E8F0',
-    marginHorizontal: 14,
-  },
-  infoRow: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: MUTED,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 3,
-  },
-  infoValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: NAVY,
-  },
-
-  /* Loading & Empty */
-  emptyScreen: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    marginTop: 14,
-    fontSize: 14,
-    color: MUTED,
-    fontWeight: '600',
-  },
-  emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: '#EAECEF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emptyIcon: {
-    fontSize: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: NAVY,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: MUTED,
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  backButton: {
+  infoPillRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  typePill: {
     backgroundColor: NAVY,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20,
   },
-  backButtonText: {
-    color: WHITE,
-    fontWeight: '600',
-    fontSize: 14,
+  typePillText: { color: WHITE, fontWeight: '700', fontSize: 11 },
+  infoCount: { fontSize: 12, color: SUBTEXT, fontWeight: '600' },
+
+  /* Section label */
+  sectionRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginBottom: 14, gap: 10,
   },
+  sectionLabel: {
+    fontSize: 11, fontWeight: '700',
+    color: MUTED, letterSpacing: 1.2,
+  },
+  sectionLine: { flex: 1, height: 2, backgroundColor: YELLOW, borderRadius: 2 },
+
+  /* Card */
+  card: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: WHITE, borderRadius: 14,
+    padding: 14, marginBottom: 10,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, shadowRadius: 4,
+    gap: 12,
+  },
+  avatarBox: {
+    width: 48, height: 48, borderRadius: 12,
+    backgroundColor: RED_BG,
+    justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+  },
+  avatarText: { color: RED, fontWeight: '800', fontSize: 18 },
+  cardInfo: { flex: 1 },
+  studentName: { fontSize: 15, fontWeight: '700', color: TEXT, marginBottom: 2 },
+  studentNim: { fontSize: 12, color: SUBTEXT, fontWeight: '500', marginBottom: 4 },
+  dateRow: { fontSize: 11, color: MUTED, fontWeight: '500' },
+  countBox: { alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: 2 },
+  countIcon: { fontSize: 20 },
+  countText: { fontSize: 11, fontWeight: '700', color: NAVY, letterSpacing: 0.3 },
+
+  /* Loading */
+  loadingText: { marginTop: 14, fontSize: 14, color: MUTED, fontWeight: '600' },
+
+  /* Empty */
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: TEXT, marginBottom: 8 },
+  emptySubtitle: {
+    fontSize: 13, color: MUTED, textAlign: 'center', lineHeight: 20, marginBottom: 28,
+  },
+  emptyBackBtn: {
+    backgroundColor: NAVY, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12,
+  },
+  emptyBackBtnText: { color: WHITE, fontWeight: '700', fontSize: 14 },
 });
 
 export default RiwayatDetailScreen;
